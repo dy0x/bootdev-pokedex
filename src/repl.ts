@@ -7,16 +7,20 @@ export function cleanInput(input: string): string[] {
 
 export function startREPL(state: State) {
   state.readline.prompt();
-  state.readline.on("line", (line) => {
+  state.readline.on("line", async (line) => {
     const cleanLine = cleanInput(line);
-    const inputCommand = cleanLine[0];
-    if (inputCommand.length === 0) {
+    const [input, ...args] = cleanLine;
+    if (input.length === 0) {
       state.readline.prompt();
       return;
     }
-    if (Object.hasOwn(state.commands, inputCommand)) {
-      const command = state.commands[inputCommand];
-      command.callback(state);
+    if (Object.hasOwn(state.commands, input)) {
+      const command = state.commands[input];
+      try {
+        await command.callback(state, ...args);
+      } catch (error: any) {
+        console.error(error.message);
+      }
     } else {
       console.log("Unknown command");
     }
